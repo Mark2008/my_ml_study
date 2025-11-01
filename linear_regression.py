@@ -7,18 +7,22 @@ from rich import print
 
 torch.manual_seed(1)
 
-x_train = torch.FloatTensor([1,2,3]).unsqueeze(dim=1)
-y_train = torch.FloatTensor([3,5,7]).unsqueeze(dim=1)
+x_train = torch.FloatTensor([
+    [73, 80, 75],
+    [93, 88, 93],
+    [89, 91, 80],
+    [96, 98, 100],
+    [73, 66, 70]
+])
+y_train = torch.FloatTensor([152, 185, 180, 196, 142]).unsqueeze(dim=1)
 
-
-W = torch.zeros(1, requires_grad=True)
+W = torch.zeros((3, 1), requires_grad=True)
 b = torch.zeros(1, requires_grad=True)
 
-hypothesis = lambda x: W * x + b
+hypothesis = lambda x: (x @ W) + b
 loss = lambda x, y: torch.mean((x - y) ** 2)
 
-cost = loss(hypothesis(x_train), y_train)
-optimizer = optim.SGD([W, b], lr=0.01)
+optimizer = optim.SGD([W, b], lr=1e-5)
 
 nb_epoches = 5000
 for epoch in tqdm(range(nb_epoches)):
@@ -30,3 +34,8 @@ for epoch in tqdm(range(nb_epoches)):
 
 print('[red]Linear Regression Model[/red]')
 print(f'[orange]W: {W}\nb: {b}[/orange]')
+
+with torch.no_grad():
+    new_input = torch.FloatTensor([73, 66, 70]).unsqueeze(dim=0)
+    prediction = hypothesis(new_input)
+    print(f'predicted value for input {new_input.squeeze().tolist()}: {prediction}')
