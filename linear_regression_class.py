@@ -2,9 +2,34 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
 
 from tqdm import tqdm
 from rich import print
+
+
+class MyDataset(Dataset):
+    def __init__(self):
+        self.x_train = torch.FloatTensor(
+            [[73, 80, 75],
+            [93, 88, 93],
+            [89, 91, 80],
+            [96, 98, 100],
+            [73, 66, 70]]
+        )
+        self.y_train = torch.FloatTensor(
+            [152, 185, 180, 196, 142]
+        ).unsqueeze(dim=1)
+
+    def __len__(self):
+        return len(self.x_train)
+    
+    def __getitem__(self, idx) -> tuple[torch.tensor, torch.tensor]:
+        x = self.x_train[idx]
+        y = self.y_train[idx]
+        return x, y
 
 
 class LinearRegressionModel(nn.Module):
@@ -18,28 +43,23 @@ class LinearRegressionModel(nn.Module):
 
 torch.manual_seed(1)
 
-x_train = torch.FloatTensor([
-    [73, 80, 75],
-    [93, 88, 93],
-    [89, 91, 80],
-    [96, 98, 100],
-    [73, 66, 70]
-])
-y_train = torch.FloatTensor([152, 185, 180, 196, 142]).unsqueeze(dim=1)
+dataset = MyDataset()
+dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
 model = LinearRegressionModel()
 optimizer = optim.SGD(model.parameters(), lr=1e-5)
 
 np_epoches = 5000
 for epoch in tqdm(range(np_epoches)):
-    prediction = model(x_train)
-    cost = F.mse_loss(prediction, y_train)
+    for x, y in dataloader:
+        prediction = model(x)
+        cost = F.mse_loss(prediction, y)
 
-    # 그래디언트 계산
-    optimizer.zero_grad()
-    cost.backward()
+        # 그래디언트 계산
+        optimizer.zero_grad()
+        cost.backward()
 
-    optimizer.step()
+        optimizer.step()
 
 print(f'model: {model}')
 with torch.no_grad():
